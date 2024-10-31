@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multilingual Chatbot</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Sidebar styling */
+        .sidebar {
+            width: 250px;
+            background-color: #333;
+            color: white;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
+        .sidebar h2 {
+            margin: 0;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #555;
+        }
+
+        .language-selector {
+            padding: 10px; 
+            margin-bottom: 10px; 
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+
+        .sidebar button {
+            padding: 10px 15px;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            text-align: left;
+            width: 100%;
+        }
+
+        .sidebar button:hover {
+            background-color: #0056b3;
+        }
+
+        .chat-list {
+            margin-top: 20px;
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+
+        .chat-list button {
+            background-color: #444;
+            margin: 5px 0;
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: left;
+            color: white;
+        }
+
+        .chat-list button:hover {
+            background-color: #555;
+        }
+
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: width 0.3s ease;
+        }
+
+        .chat-header {
+            background-color: #007bff;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            font-size: 18px;
+            display: flex;
+            align-items: center; /* Align items vertically in the center */
+        }
+
+        .chat-header .hamburger {
+            cursor: pointer;
+            display: inline-block;
+            margin-right: 10px; /* Margin right for spacing */
+            width: 30px;
+            height: 20px;
+            position: relative;
+        }
+
+        .chat-header .hamburger span {
+            display: block;
+            height: 4px;
+            background: white;
+            margin: 4px 0;
+            transition: all 0.3s ease;
+        }
+
+        .chat-history {
+            flex: 1;
+            padding: 10px;
+            overflow-y: auto;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .message {
+            margin: 10px 0;
+            display: flex;
+            position: relative;
+        }
+
+        .message p {
+            max-width: 60%;
+            padding: 10px;
+            border-radius: 10px;
+            word-wrap: break-word;
+            margin: 0;
+        }
+
+        .chat-history .user-message {
+            background-color: #dcf8c6;
+            align-self: flex-end;
+            margin-left: auto;
+        }
+
+        .chat-history .bot-message {
+            background-color: #f1f0f0;
+            align-self: flex-start;
+            margin-right: auto;
+            position: relative;
+        }
+
+        .chat-input {
+            display: flex;
+            padding: 10px;
+            background-color: #f4f4f9;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            outline: none;
+        }
+
+        .chat-input button {
+            padding: 10px 15px;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            border-radius: 4px;
+            margin-left: 10px;
+            cursor: pointer;
+        }
+
+        .chat-input button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Responsive styles */
+        @media (max-width: 768px) { 
+            .sidebar {
+                display: none; 
+            }
+
+            .chat-container {
+                flex: 1; 
+                width: 100%; 
+                padding: 0; 
+            }
+        }
+
+        @media (max-width: 375px) { 
+            .message p {
+                max-width: 80%;
+            }
+        }
+
+        @media (max-width: 320px) { 
+            .sidebar {
+                padding: 3px; 
+            }
+
+            .chat-header {
+                font-size: 14px; 
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar" id="sidebar">
+        <h2>Chat Options</h2>
+        <select class="language-selector" id="language-selector">
+            <option value="en">English</option>
+            <option value="hi">Hindi</option>
+            <option value="mr">Marathi</option>
+            <option value="ja">Japanese</option>
+            <option value="es">Spanish</option>
+            <option value="de">German</option>
+            <option value="fr">French</option>
+        </select>
+        <button onclick="newChat()">+ New Chat</button>
+        <div class="chat-list" id="chat-list">
+            <!-- List of chats will appear here -->
+        </div>
+    </div>
+
+    <div class="chat-container" id="chat-container">
+        <div class="chat-header">
+            <div class="hamburger" id="hamburger-icon" title="Close Sidebar">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+            Chat with Museum Bot
+        </div>
+        <div class="chat-history" id="chat-history">
+            <!-- Chat history will appear here -->
+        </div>
+        <div class="chat-input">
+            <input type="text" id="user-input" placeholder="Type your message..." onkeydown="handleKeyDown(event)">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        const chatHistory = document.getElementById('chat-history');
+        const userInput = document.getElementById('user-input');
+        const chatList = document.getElementById('chat-list');
+        const languageSelector = document.getElementById('language-selector');
+        const sidebar = document.getElementById('sidebar');
+        const chatContainer = document.getElementById('chat-container');
+        const hamburgerIcon = document.getElementById('hamburger-icon');
+    
+        let chats = {};
+        let currentChatId = 'Chat 1';
+        let currentLanguage = 'en'; // Default language
+    
+        // Function to format the date and time
+        function formatDateTime() {
+            const now = new Date();
+            const day = String(now.getDate()).padStart(2, '0');
+            const month = String(now.getMonth() + 1).padStart(2, '0'); // Months are zero-based
+            const year = String(now.getFullYear()).slice(-2); // Get last two digits of the year
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+        
+            return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+        }
+    
+        // Initialize Chat 1 with creation date and time
+        function initializeChat() {
+            const creationTime = formatDateTime();
+            chats[currentChatId] = [{ sender: 'Bot', message: `Welcome to the Museum Chatbot! This chat was created on ${creationTime}.` }];
+            loadChat(currentChatId);
+        }
+    
+        // Call initializeChat on page load
+        initializeChat();
+    
+        // Event listener for language selection
+        languageSelector.addEventListener('change', (event) => {
+            currentLanguage = event.target.value; // Update the current language based on selection
+        });
+    
+        function updateChatList() {
+            chatList.innerHTML = 'Chats: '; 
+            Object.keys(chats).forEach(chatId => {
+                const chatButton = document.createElement('button');
+                chatButton.textContent = chatId;
+                chatButton.onclick = () => loadChat(chatId);
+                chatList.appendChild(chatButton);
+            });
+        }
+    
+        function addMessageToHistory(message, sender) {
+            const messageContainer = document.createElement('div');
+            messageContainer.classList.add('message');
+    
+            const messageElement = document.createElement('p');
+            messageElement.textContent = message;
+    
+            if (sender === 'You') {
+                messageElement.classList.add('user-message');
+            } else {
+                messageElement.classList.add('bot-message');
+            }
+    
+            messageContainer.appendChild(messageElement);
+            chatHistory.appendChild(messageContainer);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+    
+            if (!chats[currentChatId]) {
+                chats[currentChatId] = [];
+            }
+            chats[currentChatId].push({ sender, message });
+        }
+    
+        async function sendMessage() {
+            const userMessage = userInput.value;
+        
+            if (userMessage.trim() === '') {
+                return;
+            }
+        
+            addMessageToHistory(userMessage, 'You');
+            userInput.value = '';
+        
+            // Send the message to the backend and get the response
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: userMessage,
+                        language: currentLanguage // Send the selected language to the backend
+                    })
+                });
+        
+                const data = await response.json();
+                
+                if (data.response) {
+                    addMessageToHistory(data.response, 'Bot');
+                } else {
+                    addMessageToHistory('Sorry, I did not understand that.', 'Bot');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+    
+        function handleKeyDown(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+    
+        function newChat() {
+            const chatId = prompt("Enter chat name:");
+            if (chatId) {
+                currentChatId = chatId;
+                chats[chatId] = []; 
+                updateChatList();
+                chatHistory.innerHTML = ''; 
+                initializeChat();  // Only call this to add the welcome message for the new chat
+            }
+        }
+        
+    
+        function loadChat(chatId) {
+            currentChatId = chatId;
+            chatHistory.innerHTML = '';
+            chats[chatId].forEach(chat => {
+                addMessageToHistory(chat.message, chat.sender);
+            });
+        }
+    
+        // Toggle sidebar functionality
+        hamburgerIcon.addEventListener('click', () => {
+            const isOpen = sidebar.style.display !== 'none';
+            sidebar.style.display = isOpen ? 'none' : 'flex';
+            chatContainer.style.flex = isOpen ? '1' : '3'; // Adjust the flex property based on sidebar state
+            hamburgerIcon.setAttribute('title', isOpen ? 'Open Sidebar' : 'Close Sidebar');
+        });
+    
+    </script>
+    
+</body>
+</html>
